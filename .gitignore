@@ -1,15 +1,31 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
+# IntelliJ IDEA / Android Studio project files
+*.iml                        # Module files
+.gradle/                    # Gradle cache and wrapper files
+/local.properties           # Local environment-specific properties (e.g., SDK path)
+/.idea/caches               # IDE cache
+/.idea/libraries            # External libraries configuration
+/.idea/modules.xml          # Module configuration
+/.idea/workspace.xml        # User-specific workspace settings
+/.idea/navEditor.xml        # Navigation editor settings
+/.idea/assetWizardSettings.xml  # Asset wizard settings
+
+# macOS system file
+.DS_Store                   # macOS hidden file
+
+# Build output and generated content
+/build/                     # App build output
+/captures/                 # Android Studio screenshots and recordings
+.externalNativeBuild/      # Native C/C++ build output
+.cxx/                      # Native C++ intermediate files
+
+# Log and temporary files
+*.log                       # Log files
+*.tmp                       # Temporary files
+*.bak                       # Backup files
+
+# Keystore and signing info (if any)
+*.jks                       # Java KeyStore files
+*.keystore                 # Android signing keystore
+
+# Miscellaneous
+.idea/                     # Entire IDEA project folder (optional if team uses shared settings)
