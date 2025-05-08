@@ -29,3 +29,5 @@
 
 # Miscellaneous
 .idea/                     # Entire IDEA project folder (optional if team uses shared settings)
+
+/app/java/com.moviles.exam_front.common/Constants.kt
