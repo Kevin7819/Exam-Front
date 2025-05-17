@@ -2,6 +2,8 @@ package com.moviles.exam_front.network
 
 import com.moviles.exam_front.models.Course
 import com.moviles.exam_front.models.Student
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.http.*
 
 interface ApiService {
@@ -14,11 +16,26 @@ interface ApiService {
     @GET("api/courses/{id}")
     suspend fun getCourseById(@Path("id") id: Int): Course
 
+    @Multipart
     @POST("api/courses")
-    suspend fun addCourse(@Body course: Course): Course
+    suspend fun addCourse(
+        @Part("name") name: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part("schedule") schedule: RequestBody,
+        @Part("professor") professor: RequestBody,
+        @Part imageUrl: MultipartBody.Part
+    ): Course
 
+    @Multipart
     @PUT("api/courses/{id}")
-    suspend fun updateCourse(@Path("id") id: Int, @Body course: Course): Course
+    suspend fun updateCourse(
+        @Path("id") id: Int,
+        @Part("name") name: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part("schedule") schedule: RequestBody,
+        @Part("professor") professor: RequestBody,
+        @Part imageUrl: MultipartBody.Part
+    ): Course
 
     @DELETE("api/courses/{id}")
     suspend fun deleteCourse(@Path("id") id: Int)
@@ -37,4 +54,6 @@ interface ApiService {
 
     @DELETE("api/students/{id}")
     suspend fun deleteStudent(@Path("id") id: Int)
+
+
 }
