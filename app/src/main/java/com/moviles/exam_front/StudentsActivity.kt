@@ -57,7 +57,7 @@ fun StudentListScreen(viewModel: StudentViewModel, courseId: Int) {
                             selectedStudent = it
                             showDialog = true
                         },
-                        onDelete = { viewModel.deleteStudent(it.id!!) }
+                        onDelete = { viewModel.deleteStudent(it.id!!, courseId) }
                     )
                 }
             }
