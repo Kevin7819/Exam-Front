@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface StudentDao {
-    @Query("SELECT * FROM Students WHERE courseId = :courseId")
+    @Query("SELECT * FROM students WHERE courseId = :courseId")
     fun getByCourse(courseId: Int): Flow<List<StudentEntity>>
 
     @Query("SELECT * FROM Students WHERE id = :studentId")

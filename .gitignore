@@ -1,9 +1,7 @@
 # IntelliJ IDEA / Android Studio project files
 *.iml                        # Module files
-.gradle/                    # Gradle cache and wrapper files
 /local.properties           # Local environment-specific properties (e.g., SDK path)
 /.idea/caches               # IDE cache
-/.idea/libraries            # External libraries configuration
 /.idea/modules.xml          # Module configuration
 /.idea/workspace.xml        # User-specific workspace settings
 /.idea/navEditor.xml        # Navigation editor settings
@@ -29,5 +27,3 @@
 
 # Miscellaneous
 .idea/                     # Entire IDEA project folder (optional if team uses shared settings)
-
-/app/java/com.moviles.exam_front.common/Constants.kt
