@@ -1,78 +1,114 @@
 package com.moviles.exam_front.viewmodel
 
+import android.app.Application
 import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.moviles.exam_front.data.DatabaseProvider
 import com.moviles.exam_front.models.Course
 import com.moviles.exam_front.network.RetrofitInstance
+import com.moviles.exam_front.utils.NetworkUtils
+import com.moviles.exam_front.utils.toEntity
+import com.moviles.exam_front.utils.toModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 
-class CourseViewModel : ViewModel() {
+class CourseViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Internal mutable list of courses
+    private val context = application.applicationContext
+    private val db = DatabaseProvider.getDatabase(context)
+    private val courseDao = db.courseDao()
+
+    // StateFlow para exponer la lista de cursos a la UI
     private val _courses = MutableStateFlow<List<Course>>(emptyList())
-
-    // Exposed immutable StateFlow for UI observation
     val courses: StateFlow<List<Course>> get() = _courses
 
-    // Fetch all courses from API, including their enrolled students
+    // Para mostrar el origen de los datos (API o LOCAL)
+    private val _dataOrigin = MutableStateFlow("LOCAL")
+    val dataOrigin: StateFlow<String> get() = _dataOrigin
+
+    init {
+        // Recolectamos datos desde Room y los transformamos a modelo
+        viewModelScope.launch {
+            courseDao.getAll().collect { entityList ->
+                _courses.value = entityList.map { it.toModel() }
+                Log.d("CourseViewModel", "Loaded ${entityList.size} courses from DB")
+            }
+        }
+    }
+
     fun fetchCourses() {
         viewModelScope.launch {
             try {
-                val result = RetrofitInstance.api.getCourses()
-                _courses.value = result
-                Log.i("CourseViewModel", "Courses loaded: ${result.size}")
+                if (NetworkUtils.isNetworkAvailable(context)) {
+                    Log.d("CourseViewModel", "Network available, fetching from API...")
+                    val apiCourses = RetrofitInstance.getApi().getCourses()
+                    Log.d("CourseViewModel", "Fetched ${apiCourses.size} courses from API")
+
+                    courseDao.clear()
+                    courseDao.insertAll(apiCourses.map { it.toEntity() })
+                    _dataOrigin.value = "API"
+                } else {
+                    Log.d("CourseViewModel", "No internet, using local data")
+                    _dataOrigin.value = "LOCAL"
+                }
             } catch (e: Exception) {
-                Log.e("CourseViewModel", "Failed to fetch courses: ${e.message}", e)
+                Log.e("CourseViewModel", "Error in fetchCourses: ${e.message}", e)
             }
         }
     }
 
-    // Create a new course via the API
     fun addCourse(course: Course) {
         viewModelScope.launch {
             try {
-                Log.i("CourseViewModel", "Saving course: $course")
-                val created = RetrofitInstance.api.addCourse(course)
-                _courses.value = _courses.value + created // append to current list
-                Log.i("CourseViewModel", "Course created: $created")
+                Log.d("CourseViewModel", "Adding course: $course")
+                val created = RetrofitInstance.getApi().addCourse(course)
+                courseDao.insertAll(listOf(created.toEntity()))
+                Log.d("CourseViewModel", "Course added with ID: ${created.id}")
+                fetchCourses()
             } catch (e: HttpException) {
-                Log.e("CourseViewModel", "HTTP error: ${e.message()}")
                 val errorBody = e.response()?.errorBody()?.string()
-                Log.e("CourseViewModel", "HTTP error: ${e.code()} - $errorBody")
+                Log.e("CourseViewModel", "HTTP error: ${e.message()}, Body: $errorBody")
             } catch (e: Exception) {
-                Log.e("CourseViewModel", "Error creating course: ${e.message}", e)
+                Log.e("CourseViewModel", "Error adding course: ${e.message}", e)
             }
         }
     }
 
-    // Update an existing course
     fun updateCourse(course: Course) {
         viewModelScope.launch {
             try {
-                val updated = RetrofitInstance.api.updateCourse(course.id!!, course)
-                _courses.value = _courses.value.map {
-                    if (it.id == updated.id) updated else it
-                }
-                Log.i("CourseViewModel", "Course updated: $updated")
+                Log.d("CourseViewModel", "Updating course: $course")
+                val updated = RetrofitInstance.getApi().updateCourse(course.id!!, course)
+                courseDao.insertAll(listOf(updated.toEntity()))
+                Log.d("CourseViewModel", "Course updated: ${updated.id}")
+                fetchCourses()
             } catch (e: Exception) {
-                Log.e("CourseViewModel", "Error updating course: ${e.message}")
+                Log.e("CourseViewModel", "Error updating course: ${e.message}", e)
             }
         }
     }
 
-    // Delete a course by ID
     fun deleteCourse(courseId: Int) {
         viewModelScope.launch {
             try {
-                RetrofitInstance.api.deleteCourse(courseId)
-                _courses.value = _courses.value.filter { it.id != courseId }
-                Log.i("CourseViewModel", "Course deleted: $courseId")
+                Log.d("CourseViewModel", "Deleting course with ID: $courseId")
+
+                // Eliminar en API
+                RetrofitInstance.getApi().deleteCourse(courseId)
+
+                // Eliminar localmente
+                courseDao.deleteById(courseId)
+
+                Log.d("CourseViewModel", "Course deleted from API and DB")
+
+                // Actualizar listado
+                fetchCourses()
             } catch (e: Exception) {
-                Log.e("CourseViewModel", "Error deleting course: ${e.message}")
+                Log.e("CourseViewModel", "Error deleting course: ${e.message}", e)
             }
         }
     }
